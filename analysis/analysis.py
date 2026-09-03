@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Load cleaned dataset
 df = pd.read_csv("data/cleaned_products.csv")
@@ -71,6 +72,76 @@ print(most_common_brand)
 stock_percentage = (
     df["Availability"].value_counts(normalize=True) * 100
 )
+
+# 15. Products by Category - Bar Chart
+
+category_counts = df["Category"].value_counts()
+
+plt.figure(figsize=(10, 6))
+
+category_counts.plot(kind="bar")
+
+plt.title("Number of Products by Category")
+plt.xlabel("Category")
+plt.ylabel("Number of Products")
+
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig("charts/category_distribution.png")
+
+plt.show()
+
+# 16. Product Price Distribution - Histogram
+
+plt.figure(figsize=(10, 6))
+
+plt.hist(df["Product_Price"], bins=10)
+
+plt.title("Product Price Distribution")
+plt.xlabel("Product Price")
+plt.ylabel("Number of Products")
+
+plt.tight_layout()
+plt.savefig("charts/price_distribution.png")
+
+plt.show()
+
+# 17. Product Availability - Pie Chart
+
+availability_counts = df["Availability"].value_counts()
+
+plt.figure(figsize=(7, 7))
+
+plt.pie(
+    availability_counts,
+    labels=availability_counts.index,
+    autopct="%1.1f%%",
+    startangle=90
+)
+
+plt.title("Product Availability")
+
+plt.tight_layout()
+plt.savefig("charts/availability.png")
+
+plt.show()
+
+# 18. Product Rating Distribution - Bar Chart
+
+rating_counts = df["Product_Rating"].value_counts().sort_index()
+
+plt.figure(figsize=(10, 6))
+
+rating_counts.plot(kind="bar")
+
+plt.title("Product Rating Distribution")
+plt.xlabel("Product Rating")
+plt.ylabel("Number of Products")
+
+plt.xticks(rotation=0)
+plt.tight_layout()
+plt.savefig("charts/rating_distribution.png")
+plt.show()
 
 print("\nAvailability Percentage:")
 print(stock_percentage)
