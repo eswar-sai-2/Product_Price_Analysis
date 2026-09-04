@@ -1,17 +1,35 @@
 import pandas as pd
 
 
-# Load both website datasets
-website1 = pd.read_csv("data/scrapingcourse_products.csv")
-website2 = pd.read_csv("data/barn2_products.csv")
+# ==================================================
+# 1. LOAD CLEANED WEBSITE DATASETS
+# ==================================================
+
+website1 = pd.read_csv("data/cleaned_scrapingcourse.csv")
+website2 = pd.read_csv("data/cleaned_barn2.csv")
 
 
-# Convert product names to lowercase for matching
-website1["Match_Name"] = website1["Product_Name"].str.lower().str.strip()
-website2["Match_Name"] = website2["Product_Name"].str.lower().str.strip()
+# ==================================================
+# 2. PREPARE PRODUCT NAMES FOR MATCHING
+# ==================================================
+
+website1["Match_Name"] = (
+    website1["Product_Name"]
+    .str.lower()
+    .str.strip()
+)
+
+website2["Match_Name"] = (
+    website2["Product_Name"]
+    .str.lower()
+    .str.strip()
+)
 
 
-# Find products available on both websites
+# ==================================================
+# 3. FIND PRODUCTS AVAILABLE ON BOTH WEBSITES
+# ==================================================
+
 comparison = pd.merge(
     website1,
     website2,
@@ -20,14 +38,20 @@ comparison = pd.merge(
 )
 
 
-# Calculate price difference
+# ==================================================
+# 4. CALCULATE PRICE DIFFERENCE
+# ==================================================
+
 comparison["Price_Difference"] = (
     comparison["Product_Price_Website1"]
     - comparison["Product_Price_Website2"]
 )
 
 
-# Find cheaper website
+# ==================================================
+# 5. FIND CHEAPER WEBSITE
+# ==================================================
+
 comparison["Cheaper_Website"] = comparison.apply(
     lambda row:
         "ScrapingCourse"
@@ -41,6 +65,10 @@ comparison["Cheaper_Website"] = comparison.apply(
 )
 
 
+# ==================================================
+# 6. DISPLAY COMPARISON
+# ==================================================
+
 print("=" * 70)
 print("SAME PRODUCT - DIFFERENT WEBSITE COMPARISON")
 print("=" * 70)
@@ -48,9 +76,9 @@ print("=" * 70)
 print("\nMatching products found:", len(comparison))
 
 
-# Display comparison
 print("\nPRICE COMPARISON")
 print("-" * 70)
+
 
 for _, row in comparison.iterrows():
 
@@ -77,38 +105,110 @@ for _, row in comparison.iterrows():
     )
 
 
-# Save comparison result
+# ==================================================
+# 7. SAVE COMPARISON RESULT
+# ==================================================
+
 comparison.to_csv(
     "data/product_comparison.csv",
     index=False
 )
 
 
-# --------------------------------------------------
-# RECOMMENDATION
-# --------------------------------------------------
+# ==================================================
+# 8. PRODUCT RECOMMENDATIONS
+# ==================================================
 
 print("\n" + "=" * 70)
 print("PRODUCT RECOMMENDATIONS")
 print("=" * 70)
 
+
 for _, row in comparison.iterrows():
 
     product = row["Product_Name_Website1"]
 
-    if row["Cheaper_Website"] == "Same Price":
+    price1 = row["Product_Price_Website1"]
+    price2 = row["Product_Price_Website2"]
+
+    rating1 = row.get("Product_Rating_Website1")
+    rating2 = row.get("Product_Rating_Website2")
+
+
+    # --------------------------------------------------
+    # If ratings are available on both websites
+    # --------------------------------------------------
+
+    if pd.notna(rating1) and pd.notna(rating2):
+
+        if rating1 > rating2:
+
+            recommended = "ScrapingCourse"
+            reason = "higher rating"
+
+        elif rating2 > rating1:
+
+            recommended = "Barn2"
+            reason = "higher rating"
+
+        else:
+
+            if price1 < price2:
+
+                recommended = "ScrapingCourse"
+                reason = "same rating and lower price"
+
+            elif price2 < price1:
+
+                recommended = "Barn2"
+                reason = "same rating and lower price"
+
+            else:
+
+                recommended = "Both websites"
+                reason = "same rating and same price"
+
 
         print(
-            f"{product}: Both websites have the same price."
+            f"{product}: Buy from {recommended} "
+            f"because it has {reason}."
         )
+
+
+    # --------------------------------------------------
+    # If rating is missing
+    # --------------------------------------------------
 
     else:
 
-        print(
-            f"{product}: Buy from {row['Cheaper_Website']} "
-            f"to save ${abs(row['Price_Difference']):.2f}."
-        )
+        if price1 < price2:
 
+            print(
+                f"{product}: Buy from ScrapingCourse "
+                f"to save ${abs(price1 - price2):.2f}."
+            )
+
+        elif price2 < price1:
+
+            print(
+                f"{product}: Buy from Barn2 "
+                f"to save ${abs(price1 - price2):.2f}."
+            )
+
+        else:
+
+            print(
+                f"{product}: Both websites have the same price."
+            )
+
+
+# ==================================================
+# 9. FINAL MESSAGE
+# ==================================================
 
 print("\nComparison file saved:")
 print("data/product_comparison.csv")
+
+print("\n" + "=" * 70)
+print("COMPARISON AND RECOMMENDATION COMPLETED")
+print("=" * 70)

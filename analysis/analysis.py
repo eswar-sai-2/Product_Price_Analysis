@@ -1,170 +1,251 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Load cleaned dataset
+
+# ==================================================
+# LOAD CLEANED DATA
+# ==================================================
+
 df = pd.read_csv("data/cleaned_products.csv")
 
-print("=" * 50)
+print("=" * 60)
 print("PRODUCT PRICE ANALYSIS")
-print("=" * 50)
+print("=" * 60)
 
-# 1. Total number of products
+
+# ==================================================
+# 1. TOTAL PRODUCTS
+# ==================================================
+
 print("\nTotal Products:", len(df))
 
-# 2. Average product price
-print("Average Price:", df["Product_Price"].mean())
 
-# 3. Highest product price
-print("Highest Price:", df["Product_Price"].max())
+# ==================================================
+# 2. WEBSITE-WISE PRODUCT COUNT
+# ==================================================
 
-# 4. Lowest product price
-print("Lowest Price:", df["Product_Price"].min())
+print("\nProducts by Website:")
+print(df["Website_Name"].value_counts())
 
-# 5. Average product rating
-print("Average Rating:", df["Product_Rating"].mean())
 
-# 6. Number of products in each category
-print("\nProducts by Category:")
-print(df["Category"].value_counts())
+# ==================================================
+# 3. AVERAGE PRICE
+# ==================================================
 
-# 7. Number of products by brand
-print("\nProducts by Brand:")
-print(df["Brand"].value_counts())
+print("\nAverage Price:")
+print(df["Product_Price"].mean())
 
-# 8. Availability
-print("\nProduct Availability:")
-print(df["Availability"].value_counts())
 
-# 9. Most expensive product
-most_expensive = df.loc[df["Product_Price"].idxmax()]
+# ==================================================
+# 4. HIGHEST PRICE
+# ==================================================
+
+print("\nHighest Price:")
+print(df["Product_Price"].max())
+
+
+# ==================================================
+# 5. LOWEST PRICE
+# ==================================================
+
+print("\nLowest Price:")
+print(df["Product_Price"].min())
+
+
+# ==================================================
+# 6. AVERAGE RATING
+# ==================================================
+
+print("\nAverage Rating:")
+print(df["Product_Rating"].mean())
+
+
+# ==================================================
+# 7. MOST EXPENSIVE PRODUCT
+# ==================================================
+
+most_expensive = df.loc[
+    df["Product_Price"].idxmax()
+]
 
 print("\nMost Expensive Product:")
 print("Name:", most_expensive["Product_Name"])
 print("Price:", most_expensive["Product_Price"])
+print("Website:", most_expensive["Website_Name"])
 
-# 10. Cheapest product
-cheapest = df.loc[df["Product_Price"].idxmin()]
+
+# ==================================================
+# 8. CHEAPEST PRODUCT
+# ==================================================
+
+cheapest = df.loc[
+    df["Product_Price"].idxmin()
+]
 
 print("\nCheapest Product:")
 print("Name:", cheapest["Product_Name"])
 print("Price:", cheapest["Product_Price"])
+print("Website:", cheapest["Website_Name"])
 
-# 11. Highest rated product
-highest_rated = df.loc[df["Product_Rating"].idxmax()]
 
-print("\nHighest Rated Product:")
-print("Name:", highest_rated["Product_Name"])
-print("Rating:", highest_rated["Product_Rating"])
+# ==================================================
+# 9. HIGHEST RATED PRODUCT
+# ==================================================
 
-# 12. Most common category
-most_common_category = df["Category"].value_counts().idxmax()
+if df["Product_Rating"].notna().any():
 
-print("\nMost Common Category:")
-print(most_common_category)
+    highest_rated = df.loc[
+        df["Product_Rating"].idxmax()
+    ]
 
-# 13. Most common brand
-most_common_brand = df["Brand"].value_counts().idxmax()
+    print("\nHighest Rated Product:")
+    print("Name:", highest_rated["Product_Name"])
+    print("Rating:", highest_rated["Product_Rating"])
+    print("Website:", highest_rated["Website_Name"])
 
-print("\nMost Common Brand:")
-print(most_common_brand)
+else:
 
-# 14. Stock percentage
-stock_percentage = (
-    df["Availability"].value_counts(normalize=True) * 100
-)
+    print("\nHighest Rated Product:")
+    print("Rating data is not available.")
 
-# 15. Products by Category - Bar Chart
 
-category_counts = df["Category"].value_counts()
+# ==================================================
+# 10. WEBSITE-WISE AVERAGE PRICE
+# ==================================================
 
-plt.figure(figsize=(10, 6))
+print("\nAverage Price by Website:")
 
-category_counts.plot(kind="bar")
+website_price = df.groupby(
+    "Website_Name"
+)["Product_Price"].mean()
 
-plt.title("Number of Products by Category")
-plt.xlabel("Category")
-plt.ylabel("Number of Products")
+print(website_price)
 
-plt.xticks(rotation=45)
+
+# ==================================================
+# 11. WEBSITE-WISE AVERAGE RATING
+# ==================================================
+
+print("\nAverage Rating by Website:")
+
+website_rating = df.groupby(
+    "Website_Name"
+)["Product_Rating"].mean()
+
+print(website_rating)
+
+
+# ==================================================
+# 12. PRICE COMPARISON BY WEBSITE
+# ==================================================
+
+plt.figure(figsize=(8, 6))
+
+website_price.plot(kind="bar")
+
+plt.title("Average Product Price by Website")
+plt.xlabel("Website")
+plt.ylabel("Average Price")
+
+plt.xticks(rotation=0)
 plt.tight_layout()
-plt.savefig("charts/category_distribution.png")
+
+plt.savefig(
+    "charts/website_price_comparison.png"
+)
 
 plt.show()
 
-# 16. Product Price Distribution - Histogram
+
+# ==================================================
+# 13. PRICE DISTRIBUTION
+# ==================================================
 
 plt.figure(figsize=(10, 6))
 
-plt.hist(df["Product_Price"], bins=10)
+plt.hist(
+    df["Product_Price"],
+    bins=10
+)
 
 plt.title("Product Price Distribution")
 plt.xlabel("Product Price")
 plt.ylabel("Number of Products")
 
 plt.tight_layout()
-plt.savefig("charts/price_distribution.png")
 
-plt.show()
-
-# 17. Product Availability - Pie Chart
-
-availability_counts = df["Availability"].value_counts()
-
-plt.figure(figsize=(7, 7))
-
-plt.pie(
-    availability_counts,
-    labels=availability_counts.index,
-    autopct="%1.1f%%",
-    startangle=90
+plt.savefig(
+    "charts/price_distribution.png"
 )
 
-plt.title("Product Availability")
-
-plt.tight_layout()
-plt.savefig("charts/availability.png")
-
 plt.show()
 
-# 18. Product Rating Distribution - Bar Chart
 
-rating_counts = df["Product_Rating"].value_counts().sort_index()
+# ==================================================
+# 14. RATING DISTRIBUTION
+# ==================================================
 
-plt.figure(figsize=(10, 6))
+rating_data = df["Product_Rating"].dropna()
 
-rating_counts.plot(kind="bar")
+if len(rating_data) > 0:
 
-plt.title("Product Rating Distribution")
-plt.xlabel("Product Rating")
-plt.ylabel("Number of Products")
+    rating_counts = rating_data.value_counts().sort_index()
 
-plt.xticks(rotation=0)
-plt.tight_layout()
-plt.savefig("charts/rating_distribution.png")
-plt.show()
+    plt.figure(figsize=(10, 6))
 
-# Rating vs Price Scatter Plot
+    rating_counts.plot(kind="bar")
 
-plt.figure(figsize=(10, 6))
+    plt.title("Product Rating Distribution")
+    plt.xlabel("Product Rating")
+    plt.ylabel("Number of Products")
 
-plt.scatter(
-    df["Product_Price"],
-    df["Product_Rating"]
+    plt.xticks(rotation=0)
+    plt.tight_layout()
+
+    plt.savefig(
+        "charts/rating_distribution.png"
+    )
+
+    plt.show()
+
+
+# ==================================================
+# 15. RATING VS PRICE
+# ==================================================
+
+rating_price = df.dropna(
+    subset=[
+        "Product_Price",
+        "Product_Rating"
+    ]
 )
 
-plt.title("Price vs Product Rating")
-plt.xlabel("Product Price")
-plt.ylabel("Product Rating")
+if len(rating_price) > 0:
 
-plt.tight_layout()
+    plt.figure(figsize=(10, 6))
 
-plt.savefig("charts/rating_vs_price.png")
+    plt.scatter(
+        rating_price["Product_Price"],
+        rating_price["Product_Rating"]
+    )
 
-plt.show()
+    plt.title("Price vs Product Rating")
+    plt.xlabel("Product Price")
+    plt.ylabel("Product Rating")
 
-print("\nAvailability Percentage:")
-print(stock_percentage)
+    plt.tight_layout()
 
-print("\n" + "=" * 50)
+    plt.savefig(
+        "charts/rating_vs_price.png"
+    )
+
+    plt.show()
+
+
+# ==================================================
+# FINAL
+# ==================================================
+
+print("\n" + "=" * 60)
 print("ANALYSIS COMPLETED")
-print("=" * 50)
+print("=" * 60)
