@@ -143,6 +143,25 @@ plt.tight_layout()
 plt.savefig("charts/rating_distribution.png")
 plt.show()
 
+# Rating vs Price Scatter Plot
+
+plt.figure(figsize=(10, 6))
+
+plt.scatter(
+    df["Product_Price"],
+    df["Product_Rating"]
+)
+
+plt.title("Price vs Product Rating")
+plt.xlabel("Product Price")
+plt.ylabel("Product Rating")
+
+plt.tight_layout()
+
+plt.savefig("charts/rating_vs_price.png")
+
+plt.show()
+
 print("\nAvailability Percentage:")
 print(stock_percentage)
 

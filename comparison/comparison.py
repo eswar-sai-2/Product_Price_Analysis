@@ -1,79 +1,114 @@
 import pandas as pd
 
-# Load cleaned dataset
-df = pd.read_csv("data/cleaned_products.csv")
 
-print("=" * 60)
-print("PRODUCT COMPARISON SYSTEM")
-print("=" * 60)
+# Load both website datasets
+website1 = pd.read_csv("data/scrapingcourse_products.csv")
+website2 = pd.read_csv("data/barn2_products.csv")
 
-# Show available products
-print("\nAvailable Products:")
-for i, product in enumerate(df["Product_Name"].head(20), start=1):
-    print(f"{i}. {product}")
 
-# Get product names from user
-product1 = input("\nEnter first product name: ")
-product2 = input("Enter second product name: ")
+# Convert product names to lowercase for matching
+website1["Match_Name"] = website1["Product_Name"].str.lower().str.strip()
+website2["Match_Name"] = website2["Product_Name"].str.lower().str.strip()
 
-# Find products
-p1 = df[df["Product_Name"].str.lower() == product1.lower()]
-p2 = df[df["Product_Name"].str.lower() == product2.lower()]
 
-# Check whether products exist
-if p1.empty or p2.empty:
-    print("\nProduct not found.")
-    print("Please enter the product name exactly as shown above.")
+# Find products available on both websites
+comparison = pd.merge(
+    website1,
+    website2,
+    on="Match_Name",
+    suffixes=("_Website1", "_Website2")
+)
 
-else:
-    p1 = p1.iloc[0]
-    p2 = p2.iloc[0]
 
-    print("\n" + "=" * 60)
-    print("PRODUCT COMPARISON")
-    print("=" * 60)
+# Calculate price difference
+comparison["Price_Difference"] = (
+    comparison["Product_Price_Website1"]
+    - comparison["Product_Price_Website2"]
+)
 
-    print("\nProduct 1")
-    print("-" * 30)
-    print("Name:", p1["Product_Name"])
-    print("Price:", p1["Product_Price"])
-    print("Rating:", p1["Product_Rating"])
-    print("Brand:", p1["Brand"])
-    print("Category:", p1["Category"])
-    print("Availability:", p1["Availability"])
 
-    print("\nProduct 2")
-    print("-" * 30)
-    print("Name:", p2["Product_Name"])
-    print("Price:", p2["Product_Price"])
-    print("Rating:", p2["Product_Rating"])
-    print("Brand:", p2["Brand"])
-    print("Category:", p2["Category"])
-    print("Availability:", p2["Availability"])
+# Find cheaper website
+comparison["Cheaper_Website"] = comparison.apply(
+    lambda row:
+        "ScrapingCourse"
+        if row["Price_Difference"] < 0
+        else
+        "Barn2"
+        if row["Price_Difference"] > 0
+        else
+        "Same Price",
+    axis=1
+)
 
-    # Price comparison
-    price_difference = abs(
-        p1["Product_Price"] - p2["Product_Price"]
+
+print("=" * 70)
+print("SAME PRODUCT - DIFFERENT WEBSITE COMPARISON")
+print("=" * 70)
+
+print("\nMatching products found:", len(comparison))
+
+
+# Display comparison
+print("\nPRICE COMPARISON")
+print("-" * 70)
+
+for _, row in comparison.iterrows():
+
+    print("\nProduct:", row["Product_Name_Website1"])
+
+    print(
+        "ScrapingCourse Price: $",
+        row["Product_Price_Website1"]
     )
 
-    print("\n" + "=" * 60)
-    print("COMPARISON RESULT")
-    print("=" * 60)
+    print(
+        "Barn2 Price: $",
+        row["Product_Price_Website2"]
+    )
 
-    print(f"\nPrice Difference: {price_difference:.2f}")
+    print(
+        "Price Difference: $",
+        abs(row["Price_Difference"])
+    )
 
-    if p1["Product_Price"] < p2["Product_Price"]:
-        print("Lower Price:", p1["Product_Name"])
-    elif p2["Product_Price"] < p1["Product_Price"]:
-        print("Lower Price:", p2["Product_Name"])
+    print(
+        "Cheaper Website:",
+        row["Cheaper_Website"]
+    )
+
+
+# Save comparison result
+comparison.to_csv(
+    "data/product_comparison.csv",
+    index=False
+)
+
+
+# --------------------------------------------------
+# RECOMMENDATION
+# --------------------------------------------------
+
+print("\n" + "=" * 70)
+print("PRODUCT RECOMMENDATIONS")
+print("=" * 70)
+
+for _, row in comparison.iterrows():
+
+    product = row["Product_Name_Website1"]
+
+    if row["Cheaper_Website"] == "Same Price":
+
+        print(
+            f"{product}: Both websites have the same price."
+        )
+
     else:
-        print("Both products have the same price.")
 
-    if p1["Product_Rating"] > p2["Product_Rating"]:
-        print("Higher Rated:", p1["Product_Name"])
-    elif p2["Product_Rating"] > p1["Product_Rating"]:
-        print("Higher Rated:", p2["Product_Name"])
-    else:
-        print("Both products have the same rating.")
+        print(
+            f"{product}: Buy from {row['Cheaper_Website']} "
+            f"to save ${abs(row['Price_Difference']):.2f}."
+        )
 
-    print("\n" + "=" * 60)
+
+print("\nComparison file saved:")
+print("data/product_comparison.csv")
