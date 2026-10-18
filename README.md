@@ -367,6 +367,19 @@ python visualizations/visualize_products.py
 python -m unittest discover -s tests -v
 ```
 
+## Application Screenshots
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Analytics
+![Analytics](screenshots/analytics.png)
+
+### Product Explorer
+![Product Explorer](screenshots/products.png)
+
+### Price Comparison
+![Price Comparison](screenshots/comparison.png)
 
 ## Limitations and future improvements
 
