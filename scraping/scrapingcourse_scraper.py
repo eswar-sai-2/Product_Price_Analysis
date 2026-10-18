@@ -25,7 +25,8 @@ with sync_playwright() as p:
 
         print(f"Scraping page {page_number}/12...")
 
-        page.goto(url, wait_until="domcontentloaded")
+        page.goto(url, wait_until="commit", timeout= 60000)
+        page.wait_for_timeout(3000)
 
         try:
             page.wait_for_selector("li.product", timeout=10000)

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block eyebrow %}DATA STATUS{% endblock %}
+{% block content %}
+<section class="surface-card error-state" role="alert">
+    <span class="error-mark" aria-hidden="true">!</span>
+    <p class="section-kicker">TEMPORARY DATA ISSUE</p>
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+    <p class="muted">The application could not load its dataset. Verify that the cleaned CSV is available and readable, then try again.</p>
+    <a class="btn btn-accent" href="{{ url_for('home') }}">Retry</a>
+</section>
+{% endblock %}

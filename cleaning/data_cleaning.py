@@ -1,34 +1,42 @@
+from pathlib import Path
+
 import pandas as pd
 
-
-# ==================================================
-# 1. LOAD BOTH WEBSITE DATASETS
-# ==================================================
-
-website1 = pd.read_csv("data/scrapingcourse_products.csv")
-website2 = pd.read_csv("data/barn2_products.csv")
-
-print("=" * 60)
-print("DATA CLEANING")
-print("=" * 60)
-
-print("\nScrapingCourse products:", len(website1))
-print("Barn2 products:", len(website2))
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJECT_DIR / "data"
+INPUT_FILE = DATA_DIR / "all_products.csv"
+OUTPUT_FILE = DATA_DIR / "cleaned_products.csv"
+EXPECTED_WEBSITES = {
+    "ScrapingCourse",
+    "Barn2",
+    "Books to Scrape",
+    "Scraping Sandbox",
+}
 
 
-# ==================================================
-# 2. CLEAN EACH DATASET
-# ==================================================
+def clean_dataset(df):
+    cleaned = df.copy()
 
-def clean_dataset(df, website_name):
+    if "Website_Name" not in cleaned.columns:
+        raise ValueError("Combined input is missing Website_Name")
 
-    df = df.copy()
+    cleaned["Website_Name"] = (
+        cleaned["Website_Name"].astype("string").str.strip()
+    )
+    if (
+        cleaned["Website_Name"].isna().any()
+        or cleaned["Website_Name"].eq("").any()
+    ):
+        raise ValueError("Combined input contains rows without a website name")
 
-    # Add website name if it does not exist
-    if "Website_Name" not in df.columns:
-        df["Website_Name"] = website_name
+    present_websites = set(cleaned["Website_Name"].unique())
+    missing_websites = EXPECTED_WEBSITES - present_websites
+    if missing_websites:
+        raise ValueError(
+            f"Combined input is missing website(s): "
+            f"{sorted(missing_websites)}"
+        )
 
-    # Clean text columns
     text_columns = [
         "Product_Name",
         "Brand",
@@ -36,184 +44,104 @@ def clean_dataset(df, website_name):
         "Availability",
         "SKU",
         "Product_URL",
-        "Website_Name"
+        "Website_Name",
     ]
 
     for column in text_columns:
-        if column in df.columns:
-            df[column] = (
-                df[column]
-                .fillna("")
-                .astype(str)
-                .str.strip()
+        if column in cleaned.columns:
+            cleaned[column] = (
+                cleaned[column].astype("string").str.strip()
             )
 
-    # Convert price to numeric
-    if "Product_Price" in df.columns:
-
-        df["Product_Price"] = (
-            df["Product_Price"]
-            .astype(str)
-            .str.replace(r"[^0-9.]", "", regex=True)
+    if "Product_Price" in cleaned.columns:
+        price = cleaned["Product_Price"].astype("string").str.replace(
+            r"[^0-9.-]",
+            "",
+            regex=True,
         )
-
-        df["Product_Price"] = pd.to_numeric(
-            df["Product_Price"],
-            errors="coerce"
+        cleaned["Product_Price"] = pd.to_numeric(
+            price,
+            errors="coerce",
         )
-
-        # Remove invalid negative prices
-        df.loc[
-            df["Product_Price"] < 0,
-            "Product_Price"
+        cleaned.loc[
+            cleaned["Product_Price"] < 0,
+            "Product_Price",
         ] = pd.NA
 
-    # Convert rating to numeric
-    if "Product_Rating" in df.columns:
+    if "Product_Rating" in cleaned.columns:
+        cleaned["Product_Rating"] = pd.to_numeric(
+            cleaned["Product_Rating"],
+            errors="coerce",
+        )
+        invalid_rating = (
+            (cleaned["Product_Rating"] < 0)
+            | (cleaned["Product_Rating"] > 5)
+        )
+        cleaned.loc[invalid_rating, "Product_Rating"] = pd.NA
 
-        df["Product_Rating"] = pd.to_numeric(
-            df["Product_Rating"],
-            errors="coerce"
+    if "Number_of_Reviews" in cleaned.columns:
+        cleaned["Number_of_Reviews"] = pd.to_numeric(
+            cleaned["Number_of_Reviews"],
+            errors="coerce",
         )
 
-        # Keep ratings only between 0 and 5
-        df.loc[
-            (df["Product_Rating"] < 0) |
-            (df["Product_Rating"] > 5),
-            "Product_Rating"
-        ] = pd.NA
-
-    # Convert review count if available
-    if "Number_of_Reviews" in df.columns:
-
-        df["Number_of_Reviews"] = pd.to_numeric(
-            df["Number_of_Reviews"],
-            errors="coerce"
+    if "Date_Scraped" in cleaned.columns:
+        cleaned["Date_Scraped"] = pd.to_datetime(
+            cleaned["Date_Scraped"],
+            errors="coerce",
         )
 
-    # Convert date if available
-    if "Date_Scraped" in df.columns:
-
-        df["Date_Scraped"] = pd.to_datetime(
-            df["Date_Scraped"],
-            errors="coerce"
-        )
-
-    # Normalize availability
-    if "Availability" in df.columns:
-
-        df["Availability"] = df["Availability"].replace(
+    if "Availability" in cleaned.columns:
+        cleaned["Availability"] = cleaned["Availability"].replace(
             {
                 "yes": "In Stock",
                 "Yes": "In Stock",
                 "YES": "In Stock",
                 "no": "Out of Stock",
                 "No": "Out of Stock",
-                "NO": "Out of Stock"
+                "NO": "Out of Stock",
             }
         )
 
-    # Remove duplicate products
-    if "Product_Name" in df.columns:
+    return cleaned
 
-        before = len(df)
 
-        df = df.drop_duplicates(
-            subset=["Product_Name"]
+def clean_combined_dataset():
+    if not INPUT_FILE.is_file():
+        raise FileNotFoundError(
+            f"Combined input not found: {INPUT_FILE}"
         )
 
-        after = len(df)
+    source = pd.read_csv(INPUT_FILE)
+    if "Website_Name" not in source.columns:
+        raise ValueError("Combined input is missing Website_Name")
 
-        print(
-            f"{website_name} duplicates removed:",
-            before - after
+    source_counts = (
+        source["Website_Name"]
+        .astype("string")
+        .str.strip()
+        .value_counts()
+        .to_dict()
+    )
+    cleaned = clean_dataset(source)
+    cleaned_counts = cleaned["Website_Name"].value_counts().to_dict()
+
+    if len(cleaned) != len(source) or cleaned_counts != source_counts:
+        raise RuntimeError(
+            "Cleaning changed the total or per-website row counts"
         )
+    if list(cleaned.columns) != list(source.columns):
+        raise RuntimeError("Cleaning changed the input columns")
 
-    return df
+    cleaned.to_csv(OUTPUT_FILE, index=False)
 
+    print("Cleaned products:", len(cleaned))
+    print("Products by website:")
+    print(cleaned["Website_Name"].value_counts())
+    print("Saved to:", OUTPUT_FILE)
 
-# ==================================================
-# 3. CLEAN BOTH DATASETS
-# ==================================================
-
-website1_cleaned = clean_dataset(
-    website1,
-    "ScrapingCourse"
-)
-
-website2_cleaned = clean_dataset(
-    website2,
-    "Barn2"
-)
+    return cleaned
 
 
-# ==================================================
-# 4. DISPLAY MISSING VALUES
-# ==================================================
-
-print("\nMissing values - ScrapingCourse:")
-print(website1_cleaned.isnull().sum())
-
-print("\nMissing values - Barn2:")
-print(website2_cleaned.isnull().sum())
-
-
-# ==================================================
-# 5. SAVE CLEANED DATASETS
-# ==================================================
-
-website1_cleaned.to_csv(
-    "data/cleaned_scrapingcourse.csv",
-    index=False
-)
-
-website2_cleaned.to_csv(
-    "data/cleaned_barn2.csv",
-    index=False
-)
-
-
-# ==================================================
-# 6. CREATE COMBINED DATASET
-# ==================================================
-
-combined = pd.concat(
-    [
-        website1_cleaned,
-        website2_cleaned
-    ],
-    ignore_index=True
-)
-
-
-combined.to_csv(
-    "data/cleaned_products.csv",
-    index=False
-)
-
-
-# ==================================================
-# 7. FINAL INFORMATION
-# ==================================================
-
-print("\n" + "=" * 60)
-print("DATA CLEANING COMPLETED")
-print("=" * 60)
-
-print("\nScrapingCourse cleaned products:",
-      len(website1_cleaned))
-
-print("Barn2 cleaned products:",
-      len(website2_cleaned))
-
-print("Combined products:",
-      len(combined))
-
-print("\nFiles created:")
-
-print("data/cleaned_scrapingcourse.csv")
-print("data/cleaned_barn2.csv")
-print("data/cleaned_products.csv")
-
-print("\nCombined dataset columns:")
-print(combined.columns.tolist())
+if __name__ == "__main__":
+    clean_combined_dataset()

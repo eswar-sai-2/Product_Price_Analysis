@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Data sources{% endblock %}
+{% block eyebrow %}DATASET PROVENANCE{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="section-kicker">WHAT'S IN THE DATA</p><h1>Data sources</h1><p class="page-subtitle">Source names, row totals and scrape dates are read from the canonical CSV at request time.</p></div></section>
+<div class="notice notice-info" role="note">The cleaned dataset contains {{ "{:,}".format(total_products) }} product rows. The source label and date below reflect CSV values, not a live connection to those websites.</div>
+<section class="source-grid" aria-label="Product source summaries">
+    {% for source in sources %}
+    <article class="surface-card source-card">
+        <div class="source-icon" aria-hidden="true">{{ source.name[:1] }}</div>
+        <p class="section-kicker">COLLECTED SOURCE</p><h2>{{ source.name }}</h2>
+        <strong class="source-count">{{ "{:,}".format(source.count) }}</strong><span class="muted">products in current dataset</span>
+        <div class="source-dates"><strong>Available scrape dates</strong>{% if source.dates %}<ul>{% for date in source.dates %}<li><time datetime="{{ date }}">{{ date }}</time></li>{% endfor %}</ul>{% else %}<p class="muted mb-0">No scrape date recorded.</p>{% endif %}</div>
+    </article>
+    {% else %}
+    <div class="surface-card"><div class="empty-state"><strong>No source records</strong><span>The dataset currently has no website names.</span></div></div>
+    {% endfor %}
+</section>
+<section class="surface-card fields-card">
+    <div class="card-heading"><div><p class="section-kicker">CSV SCHEMA</p><h2>Collected fields</h2></div></div>
+    <p class="muted">These are the columns currently present in <code>cleaned_products.csv</code>:</p>
+    <ul class="field-list">{% for field in fields %}<li><code>{{ field }}</code></li>{% endfor %}</ul>
+    <p class="muted mb-0">Field availability can vary by source. Prices do not have a currency column; product ratings, availability and scrape dates may be missing.</p>
+</section>
+{% endblock %}

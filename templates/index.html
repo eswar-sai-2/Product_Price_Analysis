@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block eyebrow %}OVERVIEW{% endblock %}
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="section-kicker">YOUR CATALOG AT A GLANCE</p>
+        <h1>Overview</h1>
+        <p class="page-subtitle">A live summary calculated from the cleaned product dataset.</p>
+    </div>
+    <a class="btn btn-accent" href="{{ url_for('product_list') }}">Explore products <span aria-hidden="true">→</span></a>
+</section>
+
+<div class="notice notice-info" role="note">
+    <strong>Recorded amounts only.</strong> The displayed mean and price extrema are arithmetic summaries of numeric CSV values, not currency-normalized measures. Currency metadata is absent, so they should not be interpreted as economic comparisons across products or websites.
+</div>
+
+<section class="kpi-grid" aria-label="Dataset key performance indicators">
+    <article class="kpi-card"><span class="kpi-label">Total products</span><strong class="kpi-value">{{ "{:,}".format(stats.total_products) }}</strong><span class="kpi-foot">Rows in the cleaned dataset</span></article>
+    <article class="kpi-card"><span class="kpi-label">Websites</span><strong class="kpi-value">{{ stats.total_websites }}</strong><span class="kpi-foot">Distinct source names</span></article>
+    <article class="kpi-card"><span class="kpi-label">Mean recorded amount</span><strong class="kpi-value">{% if stats.average_price is not none %}{{ "%.2f"|format(stats.average_price) }}{% else %}—{% endif %}</strong><span class="kpi-foot">Raw arithmetic mean; currencies unverified</span></article>
+    <article class="kpi-card"><span class="kpi-label">Average available rating</span><strong class="kpi-value">{% if stats.average_rating is not none %}{{ "%.2f"|format(stats.average_rating) }}<small> / 5</small>{% else %}—{% endif %}</strong><span class="kpi-foot">{{ "{:,}".format(stats.rated_products) }} valid ratings</span></article>
+    <article class="kpi-card"><span class="kpi-label">Highest recorded price</span><strong class="kpi-value">{% if stats.highest_price is not none %}{{ "%.2f"|format(stats.highest_price) }}{% else %}—{% endif %}</strong><span class="kpi-foot">Recorded amount; currency unknown</span></article>
+    <article class="kpi-card"><span class="kpi-label">Lowest recorded price</span><strong class="kpi-value">{% if stats.lowest_price is not none %}{{ "%.2f"|format(stats.lowest_price) }}{% else %}—{% endif %}</strong><span class="kpi-foot">Recorded amount; currency unknown</span></article>
+</section>
+
+<section class="content-grid overview-grid">
+    <article class="surface-card">
+        <div class="card-heading">
+            <div><p class="section-kicker">SOURCE BREAKDOWN</p><h2>Products by website</h2></div>
+            <a class="text-link" href="{{ url_for('data_sources') }}">View sources <span aria-hidden="true">→</span></a>
+        </div>
+        {% if website_counts %}
+        <div class="chart-frame" aria-busy="true">
+            <p class="chart-fallback" id="overview-chart-fallback">Loading interactive website counts…</p>
+            <canvas id="website-count-chart" role="img" aria-label="Interactive doughnut chart of product counts by website"></canvas>
+        </div>
+        <script id="overview-chart-data" type="application/json">{{ chart_data|tojson }}</script>
+        <ul class="legend-list">
+            {% for website, count in website_counts.items() %}
+            <li><span>{{ website }}</span><strong>{{ "{:,}".format(count) }}</strong></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state"><strong>No source data available</strong><span>The dataset contains no website counts yet.</span></div>
+        {% endif %}
+    </article>
+
+    <article class="surface-card">
+        <div class="card-heading">
+            <div><p class="section-kicker">RECENT CATALOG VIEW</p><h2>Products</h2></div>
+            <a class="text-link" href="{{ url_for('product_list') }}">Browse all <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="table-responsive">
+            <table class="table data-table align-middle">
+                <thead><tr><th scope="col">Product</th><th scope="col">Recorded price</th><th scope="col">Website</th></tr></thead>
+                <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td class="product-cell">
+                            {% if product.safe_product_url %}<a href="{{ product.safe_product_url }}" target="_blank" rel="noopener noreferrer">{{ product.Product_Name }}</a>{% else %}{{ product.Product_Name }}{% endif %}
+                            <small>{{ product.Availability|default("Availability not provided", true) }}</small>
+                        </td>
+                        <td>{% if product.Product_Price is not none %}{{ "%.2f"|format(product.Product_Price) }}{% else %}<span class="muted">Unavailable</span>{% endif %}</td>
+                        <td>{{ product.Website_Name|default("Unknown", true) }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="3"><div class="empty-state"><strong>No products to show</strong><span>Check that the cleaned CSV contains product rows.</span></div></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+{% endblock %}
