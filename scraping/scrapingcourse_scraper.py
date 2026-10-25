@@ -15,7 +15,7 @@ with sync_playwright() as p:
 
     print("Opening ScrapingCourse...")
 
-    # There are 12 pages
+                        
     for page_number in range(1, 13):
 
         if page_number == 1:
@@ -42,12 +42,12 @@ with sync_playwright() as p:
 
             card = cards.nth(i)
 
-            # Product name
+                          
             name = card.locator(
                 ".woocommerce-loop-product__title"
             ).inner_text().strip()
 
-            # Product price
+                           
             price_text = card.locator(
                 ".price"
             ).inner_text().strip()
@@ -62,7 +62,7 @@ with sync_playwright() as p:
             else:
                 price = None
 
-            # Product URL
+                         
             link = card.locator("a").first.get_attribute("href")
 
             products.append({
@@ -77,18 +77,18 @@ with sync_playwright() as p:
     browser.close()
 
 
-# Create DataFrame
+                  
 df = pd.DataFrame(products)
 
-# Remove duplicate products
+                           
 df = df.drop_duplicates(
     subset=["Product_Name"]
 )
 
-# Create data folder
+                    
 os.makedirs("data", exist_ok=True)
 
-# Save CSV
+          
 output_file = "data/scrapingcourse_products.csv"
 
 df.to_csv(

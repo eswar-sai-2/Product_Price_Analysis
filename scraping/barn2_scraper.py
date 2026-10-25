@@ -56,7 +56,7 @@ with sync_playwright() as p:
 
     all_products = []
 
-    # Scrape pages 1 to 5
+                         
     for page_number in range(1, 6):
 
         print(f"Scraping page {page_number}...")
@@ -73,7 +73,7 @@ with sync_playwright() as p:
 
             product = products.nth(i)
 
-            # Product name
+                          
             name_element = product.locator(
                 ".woocommerce-loop-product__title"
             )
@@ -83,7 +83,7 @@ with sync_playwright() as p:
 
             product_name = name_element.inner_text().strip()
 
-            # Product price
+                           
             price_element = product.locator(".price")
 
             if price_element.count() > 0:
@@ -96,7 +96,7 @@ with sync_playwright() as p:
 
             product_price = clean_price(price_text)
 
-            # Product rating
+                            
             rating_element = product.locator(".star-rating")
 
             if rating_element.count() > 0:
@@ -117,7 +117,7 @@ with sync_playwright() as p:
                 "Date_Scraped": str(date.today())
             })
 
-        # Move to next page
+                           
         if page_number < 5:
 
             next_number = page_number + 1
@@ -147,15 +147,15 @@ with sync_playwright() as p:
     browser.close()
 
 
-# Create DataFrame
+                  
 df = pd.DataFrame(all_products)
 
-# Remove duplicate products
+                           
 df = df.drop_duplicates(
     subset=["Product_Name"]
 )
 
-# Save CSV
+          
 output_file = "data/barn2_products.csv"
 
 df.to_csv(

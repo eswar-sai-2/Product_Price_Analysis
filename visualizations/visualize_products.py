@@ -2,18 +2,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# Project paths
+               
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_DIR / "data"
 OUTPUT_DIR = PROJECT_DIR / "visualizations"
 
-# Create the output folder if necessary
+                                       
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Load cleaned data
+                   
 df = pd.read_csv(DATA_DIR / "cleaned_products.csv")
 
-# Convert columns to numeric
+                            
 df["Product_Price"] = pd.to_numeric(
     df["Product_Price"], errors="coerce"
 )
@@ -22,16 +22,16 @@ df["Product_Rating"] = pd.to_numeric(
     df["Product_Rating"], errors="coerce"
 )
 
-# Calculate website statistics
+                              
 website_stats = df.groupby("Website_Name").agg(
     Product_Count=("Product_Name", "count"),
     Average_Price=("Product_Price", "mean"),
     Average_Rating=("Product_Rating", "mean")
 )
 
-# --------------------------------------------------
-# GRAPH 1: PRODUCT COUNT BY WEBSITE
-# --------------------------------------------------
+                                                    
+                                   
+                                                    
 
 plt.figure(figsize=(10, 6))
 
@@ -54,9 +54,9 @@ plt.savefig(
 plt.show()
 plt.close()
 
-# --------------------------------------------------
-# GRAPH 2: AVERAGE PRICE BY WEBSITE
-# --------------------------------------------------
+                                                    
+                                   
+                                                    
 
 plt.figure(figsize=(10, 6))
 
@@ -79,9 +79,9 @@ plt.savefig(
 plt.show()
 plt.close()
 
-# --------------------------------------------------
-# GRAPH 3: AVERAGE RATING BY WEBSITE
-# --------------------------------------------------
+                                                    
+                                    
+                                                    
 
 plt.figure(figsize=(10, 6))
 
@@ -105,9 +105,9 @@ plt.savefig(
 plt.show()
 plt.close()
 
-# --------------------------------------------------
-# GRAPH 4: PRODUCT PRICE DISTRIBUTION
-# --------------------------------------------------
+                                                    
+                                     
+                                                    
 
 plt.figure(figsize=(10, 6))
 
@@ -130,9 +130,9 @@ plt.savefig(
 plt.show()
 plt.close()
 
-# --------------------------------------------------
-# GRAPH 5: TOP 10 MOST EXPENSIVE PRODUCTS
-# --------------------------------------------------
+                                                    
+                                         
+                                                    
 
 top_10 = df.nlargest(
     10, "Product_Price"

@@ -1,16 +1,16 @@
 import pandas as pd
 from pathlib import Path
 
-# Project paths
+               
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_DIR / "data"
 
 INPUT_FILE = DATA_DIR / "cleaned_products.csv"
 
-# Load cleaned dataset
+                      
 df = pd.read_csv(INPUT_FILE)
 
-# Convert numeric columns
+                         
 df["Product_Price"] = pd.to_numeric(
     df["Product_Price"], errors="coerce"
 )
@@ -23,7 +23,7 @@ print("=" * 60)
 print("PRODUCT PRICE ANALYSIS")
 print("=" * 60)
 
-# 1. Overall statistics
+                       
 print("\n1. OVERALL STATISTICS")
 print("Total products:", len(df))
 print("Number of websites:", df["Website_Name"].nunique())
@@ -35,7 +35,7 @@ print(
     round(df["Product_Rating"].mean(), 2)
 )
 
-# 2. Website-wise analysis
+                          
 print("\n2. WEBSITE-WISE ANALYSIS")
 
 website_analysis = df.groupby("Website_Name").agg(
@@ -48,12 +48,12 @@ website_analysis = df.groupby("Website_Name").agg(
 
 print(website_analysis)
 
-# Save website analysis
+                       
 website_analysis.to_csv(
     DATA_DIR / "website_analysis.csv"
 )
 
-# 3. Availability analysis
+                          
 print("\n3. AVAILABILITY COUNTS")
 
 availability_counts = (
@@ -69,7 +69,7 @@ availability_counts.to_csv(
     header=["Count"]
 )
 
-# 4. Top 10 most expensive products
+                                   
 print("\n4. TOP 10 MOST EXPENSIVE PRODUCTS")
 
 top_expensive = df.nlargest(

@@ -1,37 +1,37 @@
 import pandas as pd
 from pathlib import Path
 
-# Project paths
+               
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_DIR / "data"
 OUTPUT_DIR = PROJECT_DIR / "comparison"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Load cleaned dataset
+                      
 df = pd.read_csv(DATA_DIR / "cleaned_products.csv")
 
-# Convert price to numeric
+                          
 df["Product_Price"] = pd.to_numeric(
     df["Product_Price"], errors="coerce"
 )
 
-# Select the two websites
+                         
 comparison = df[
     df["Website_Name"].isin(["Barn2", "ScrapingCourse"])
 ].copy()
 
-# Keep only rows with product names and prices
+                                              
 comparison = comparison.dropna(
     subset=["Product_Name", "Product_Price"]
 )
 
-# Group by product name and website
+                                   
 grouped = comparison.groupby(
     ["Product_Name", "Website_Name"]
 )["Product_Price"].mean().unstack()
 
-# Keep products available on both websites
+                                          
 if "Barn2" in grouped.columns and "ScrapingCourse" in grouped.columns:
 
     matched = grouped.dropna(

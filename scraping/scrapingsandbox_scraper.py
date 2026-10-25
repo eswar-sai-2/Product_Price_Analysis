@@ -7,9 +7,9 @@ from urllib.parse import urljoin
 import pandas as pd
 from playwright.sync_api import sync_playwright
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
+                                                              
+               
+                                                              
 
 BASE_URL = "https://scrapingsandbox.com/"
 OUTPUT_FILE = "data/scrapingsandbox_products.csv"
@@ -38,9 +38,9 @@ RATING_SELECTORS = [
 ]
 
 
-# ============================================================
-# HELPERS
-# ============================================================
+                                                              
+         
+                                                              
 
 def safe_text(locator):
     try:
@@ -93,9 +93,9 @@ def first_nonempty(card, selectors):
     return None
 
 
-# ============================================================
-# FIELD EXTRACTION
-# ============================================================
+                                                              
+                  
+                                                              
 
 def extract_name(card, card_text):
     element = first_nonempty(card, TITLE_SELECTORS)
@@ -113,7 +113,7 @@ def extract_name(card, card_text):
         ):
             return name
 
-    # The product name is usually a line after the vendor and rating.
+                                                                     
     lines = [re.sub(r"\s+", " ", x).strip()
              for x in card_text.splitlines() if x.strip()]
     for line in lines:
@@ -153,7 +153,7 @@ def extract_price(card, card_text):
         except Exception:
             pass
 
-    # Use currency-marked values only; first is the current price on this site.
+                                                                               
     matches = re.findall(r"[$₹€£]\s*(\d[\d,]*(?:\.\d{1,2})?)", card_text)
     if matches:
         try:
@@ -186,8 +186,8 @@ def extract_rating(card, card_text):
         except Exception:
             pass
 
-    # Rating appears as a number on the product card before its name.
-    # Match the known card structure and avoid SKU/price numbers.
+                                                                     
+                                                                 
     lines = [x.strip() for x in card_text.splitlines() if x.strip()]
     for line in lines:
         if re.search(r"SKU|[$₹€£]|stock", line, re.I):
@@ -246,9 +246,9 @@ def extract_product(card):
     }
 
 
-# ============================================================
-# PAGINATION
-# ============================================================
+                                                              
+            
+                                                              
 
 def page_signature(page):
     """Return product URLs/text for the first few visible product cards."""
@@ -275,7 +275,7 @@ def click_numbered_page(page, page_number):
     old_signature = page_signature(page)
     old_url = page.url
 
-    # Prefer exact-text buttons. The website uses actual buttons for pagination.
+                                                                                
     try:
         candidates = page.locator("button").filter(has_text=re.compile(rf"^\s*{re.escape(target)}\s*$"))
         for i in range(candidates.count()):
@@ -297,7 +297,7 @@ def click_numbered_page(page, page_number):
     except Exception:
         pass
 
-    # Fallback: identify exact-label pagination button in the DOM and invoke click().
+                                                                                     
     try:
         clicked = page.evaluate("""target => {
             const visible = el => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
@@ -328,7 +328,7 @@ def click_numbered_page(page, page_number):
     except Exception as exc:
         print(f"DOM click attempt for page {target} failed: {exc}")
 
-    # Print actionable diagnostics rather than silently guessing.
+                                                                 
     try:
         info = page.locator("button").evaluate_all("""els => els.map(el => ({
             text: el.innerText.trim(),
@@ -344,9 +344,9 @@ def click_numbered_page(page, page_number):
     return False
 
 
-# ============================================================
-# MAIN
-# ============================================================
+                                                              
+      
+                                                              
 
 def main():
     os.makedirs("data", exist_ok=True)
